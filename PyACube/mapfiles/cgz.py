@@ -233,7 +233,7 @@ class ACMap():
 	"""
 		Main map class. Contains the parser, and various miscellaneous functions.
 	"""
-	def __init__(self, mappath = '', parse = True, sfactor = 6, mapversion = CURRENTMAPVERSION):
+	def __init__(self, mappath='', parse=True, sfactor=6, mapversion=CURRENTMAPVERSION, maptitle=''):
 		self.cubelist = []
 		self.mappath = mappath
 		self.header = Header()
@@ -253,10 +253,8 @@ class ACMap():
 			self.header.head = "ACMP"
 			self.header.headersize = 1108
 			self.header.numents = 0
-			self.maptitle = mappath
+			self.maptitle = maptitle
 			self.populate()
-			#print len(self.cubeArray)
-			#print len(self.cubeArray[0])
 		
 	def parseCGZ(self, path):
 		"""
@@ -513,7 +511,7 @@ class ACMap():
 	
 	def placeMacro(self, macro, xoffset, yoffset):
 		"""
-			Old method, should not be used.1
+			Old method, should not be used.
 			Places a macro. A macro is a list of cube coords.
 			
 		"""
@@ -523,12 +521,13 @@ class ACMap():
 			sqr.ftex = 0
 			sqr.wtex = 0
 	
-	def placeShape(self, coords, sqr=None, includes=None, solid=False):
+	def placeShape(self, coords, origin=(0,0), sqr=None, includes=None):
 		"""
 			Places a shape on the map.
 			coords - The shape. A list of coordinates to modify.
+			origin - The upper left corner of where the shape will be placed.
 			sqr - The square template (a Square() class) to change the coords to.
-			includes - A dictionary of attributes to change.
+			includes - A dictionary of attributes to change. If sqr is left as None, then the values are used as absolutes. If sqr is not None, then the keys given in includes will be the values copied from sqr to the shape.
 				'kind' - changes the squares kind to the value given.
 				'floor' - changes the squares height by the value given. None makes this the same as the sqr's floor value
 				'wtex' - changes the squares wtex to the value given.
@@ -537,19 +536,17 @@ class ACMap():
 				'ftex'  - changes the squares ftex to the value given.
 				'utex'  - changes the squares utex to the value given.
 				'tag' - changes the squares tag to the value given.
+				
+				'fd' - stands for floor delta, if it exists then the floor value is given as a delta.
+				'cd' - stands for ceil delta, if it exists then the floor value is given as a delta.
 			
 		"""
-		if sqr==None:
-			if solid:
-				sqr=self.defaultsqr[1]
-			else:
-				sqr=self.defaultsqr[0]
-		if includes==None:
+		if includes == None and sqr != None:
 			for coord in coords:
-				self.cubeArray[coord[0]][coord[1]] = sqr.clone()
-		else:
+				self.cubeArray[coord[1]+origin[1]][coord[0]+origin[0]] = sqr.clone()
+		elif includes != None and sqr != None:
 			for coord in coords:
-				cube = self.cubeArray[coord[0]][coord[1]]
+				cube = self.cubeArray[coord[1]+origin[1]][coord[0]+origin[0]]
 				if 'kind' in includes: cube.kind = sqr.kind
 				if 'floor' in includes:
 					if includes['floor'] != None:
@@ -567,6 +564,27 @@ class ACMap():
 				if 'ctex' in includes: cube.ctex = sqr.ctex
 				if 'utex' in includes: cube.utex = sqr.utex
 				if 'tag' in includes: cube.tag = sqr.tag
+		elif includes != None and sqr == None:
+			for coord in coords:
+				cube = self.cubeArray[coord[1]+origin[1]][coord[0]+origin[0]]
+				if 'kind' in includes: cube.kind = includes['kind']
+				if 'floor' in includes:
+					if 'fd' in includes:
+						cube.floor += includes['floor']
+					else:
+						cube.floor = includes['floor']
+				if 'wtex' in includes: cube.wtex = includes['wtex']
+				if 'vdelta' in includes: cube.vdelta = includes['vdelta']
+				if 'ceil' in includes:
+					if 'cd' in includes:
+						cube.ceil += includes['ceil']
+					else:
+						 cube.ceil = includes['ceil']
+				if 'ftex' in includes: cube.ftex = includes['ftex']
+				if 'ctex' in includes: cube.ctex = includes['ctex']
+				if 'utex' in includes: cube.utex = includes['utex']
+				if 'tag' in includes: cube.tag = includes['tag']
+		
 			
 	def entstats(self):
 		"""

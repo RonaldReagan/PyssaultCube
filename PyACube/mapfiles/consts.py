@@ -2,7 +2,7 @@ CURRENTMAPVERSION = 8
 
 #Kinds of entities
 
-class enttypes():
+class EntTypes():
 	"""
 		A class containing all kinds of entities used.
 		
@@ -73,7 +73,7 @@ class LightAttrs:
 	G = 2
 	B = 3
 
-class teams():
+class Teams():
 	"""
 		Team numbers as according to the map format.
 		

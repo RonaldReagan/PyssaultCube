@@ -1,0 +1,4 @@
+PyACube by Ronald_Reagan
+=======
+
+PyACube is licensed under the CC BY-NC-ND 3.0 license which can be found here: http://creativecommons.org/licenses/by-nc-nd/3.0/

@@ -1,4 +1,4 @@
-PyssaltCube
+PyssaultCube
 ===========
 
 Provides python utilities to AssaultCube written by Ronald_Reagan

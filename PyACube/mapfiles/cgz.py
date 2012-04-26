@@ -253,7 +253,7 @@ class ACMap():
 			self.header.head = "ACMP"
 			self.header.headersize = 1108
 			self.header.numents = 0
-			self.maptitle = maptitle
+			self.header.maptitle = maptitle
 			self.populate()
 		
 	def parseCGZ(self, path):
@@ -469,14 +469,14 @@ class ACMap():
 		x = index - (y*ssize)
 		return [x, y]
 	
-	def outofBounds(self, x, y):
+	def outofBounds(self, (x, y)):
 		"""
 			Determines if the coords given are out of bounds.
 		"""
 		if self.returnIndex(x, y) >= self.cubicsize():
 			return True
 			
-	def badcube(self, x, y, border = 2):
+	def badcube(self, (x, y), border = 2):
 		"""
 			Due to the buggyness of the Cube engine, this determines if a cube is "bad".
 			A bad cube is a cube that may have trouble rendering ingame.
@@ -490,6 +490,16 @@ class ACMap():
 		if x <= border or y <= border:
 			return True
 		return False
+	
+	def drawBorder(self, border=2):
+		"""
+			Draws a border around the edge of the map. This prevents visual glitches when
+			viewing the maps edge. It is recommended for all maps (if made from scratch).
+			Border is the border you want around the map. Nothing lower than 2 is recommended.
+		"""
+		for i, cube in enumerate(self.cubelist):
+			if self.badcube(self.returnXY(i), border):
+				cube.kind = CubeTypes.SOLID
 	
 	def addEnt(self, kind, x, y, z, attr1, attr2, attr3, attr4):
 		"""

@@ -29,3 +29,6 @@ pip-log.txt
 
 #Misc:
 .DS_Store
+
+#Sphinx
+docs

@@ -58,15 +58,18 @@ class Square():
 		The names closely follow the names used on the AC source.
 		
 		Main variables:
-		kind   = cube type, revalant constants are defined in consts.py
-		wtex   = wall texture
-		vdelta = delta used for heightfielding, the surface that is heightfielded is specified by the kind
-		floor  = floor height
-		ceil   = ceiling height
-		ftex   = floor texture
-		ctex   = ceiling texture
-		utex   = upper wall texture
-		tac    = gets saved to the map, however is mostly unused and left at 0
+		
+		:param kind: cube type, revalant constants are defined in consts.py
+		:param wtex: wall texture
+		:param vdelta: delta used for heightfielding, the surface that is heightfielded is specified by the kind
+		:param floor: floor height
+		:param ceil: ceiling height
+		:param ftex: floor texture
+		:param ctex: ceiling texture
+		:param utex: upper wall texture
+		:param tag: gets saved to the map, however is mostly unused and left at 0F)
+			
+			
 	"""
 	def __init__(self, kind, wtex = 2, vdelta = 0, floor = 0, ceil = 16, ftex = 3, ctex = 5, utex = 2, tag = 0):
 		"""
@@ -91,7 +94,9 @@ class Square():
 
 	def pack(self):
 		"""
-			returns the square packed in a save file format
+			Packs the square into the format used in the mapfile.
+			
+			:rtype: Packed string
 		"""
 		#sqr = Square( val[0], floor = val[1], ceil = val[2], wtex = val[3], ftex = val[4], ctex = val[5], vdelta = val[6], utex = val[7], tag = val[8])
 		if self.kind == 0:
@@ -102,12 +107,16 @@ class Square():
 	def height(self):
 		"""
 			Returns the height in cubes
+			
+			:rtype: Integer
 		"""
 		return self.ceil - self.floor
 			
 	def compare(self, sqr):
 		"""
 			Compares a square to the previous square. Used mainly by the map saving to provide compression.
+			
+			:rtype: Bool
 		"""
 		if sqr == None:
 			return False
@@ -125,6 +134,8 @@ class Square():
 	def clone(self):
 		"""
 			Returns a clone of the square
+			
+			:rtype: PyACube.cgz.Square
 		"""
 		if self.kind == 0:
 			return Square( self.kind, wtex = self.wtex, vdelta = self.vdelta)
@@ -211,6 +222,11 @@ class Entity():
 		Entity class.
 		As every kind of entity is stored here, this acts as a reletivly low level container.
 		The constants in consts.py will help with the kind, and the attributes for each kind of entity
+		
+		:param kind: Kind of entity
+		:param xyz: The entities position (x, y, z)
+		:type xyz: Tuple
+		:param attrs: A list of attributes.
 	"""
 	def __init__(self, xyz, attrs, kind):
 		self.kind = kind
@@ -220,6 +236,8 @@ class Entity():
 	def pack(self):
 		"""
 			Packs the entity to save in the mapfile
+			
+			:rtype: Packed string
 		"""
 		retstr = ''
 		for i in range(3):
@@ -232,13 +250,30 @@ class Entity():
 class ACMap():
 	"""
 		Main map class. Contains the parser, and various miscellaneous functions.
+		
+		When instantiating, if parse is false than an empty map will be made with the size given by sfactor)::
+			
+			mymap = ACMap(parse=False, sfactor=6, maptitle="My map by my name!") #Creates an empty map with a mapmsg defined. mappath will be set to ''
+			hismap = ACMap('ac_aqueous.cgz') #Will open and parse ac_aqueous, mappath will be set to 'ac_aqueous.cgz'
+		
+		:param cubelist: Contains all squares (cubes) in the map
+		:type cubelist: list of Squares
+		:param mappath: Path to the map
+		:param header: The header of the map
+		:type header: Header
+		:param entities: Contains all entities in the map
+		:type entities: list of Entitys
+		:param defaults: Default values for a square in the map
+		:type defaults: dictionary of values
+		:param defaultsqr: The default square used in various operations to the map. Uses values from defaults.
+		:type defaultsqr: Square
 	"""
 	def __init__(self, mappath='', parse=True, sfactor=6, mapversion=CURRENTMAPVERSION, maptitle=''):
 		self.cubelist = []
 		self.mappath = mappath
 		self.header = Header()
 		self.entities = []
-		self.defaults = defaults={"wtex":2, "vdelta":0, "floor":0, "ceil":16, "ftex":3, "ctex":5, "utex":2, "tag":0}
+		self.defaults = {"wtex":2, "vdelta":0, "floor":0, "ceil":16, "ftex":3, "ctex":5, "utex":2, "tag":0}
 		self.defaultsqr = (Square(CubeTypes.SPACE, utex = self.defaults["utex"], tag = self.defaults["tag"], floor = self.defaults["floor"], ftex = self.defaults["ftex"], vdelta = self.defaults["vdelta"], ctex = self.defaults["ctex"], wtex = self.defaults["wtex"], ceil = self.defaults["ceil"] ),Square(CubeTypes.SOLID, wtex = self.defaults["wtex"], vdelta = self.defaults["vdelta"]))
 		if parse:
 			if self.mappath == '':
@@ -328,6 +363,8 @@ class ACMap():
 	def entitypack(self):
 		"""
 			Packs all entities for saving.
+			
+			:returns: String of packed entities
 		"""
 		retstr = ''
 		for i in self.entities:
@@ -337,6 +374,8 @@ class ACMap():
 	def packcubes(self):
 		"""
 			Packs all cubes for saving.
+			
+			:returns: String of packed cubes
 		"""
 		retstr = ''
 		lastsqr = None
@@ -381,20 +420,18 @@ class ACMap():
 	def save(self):
 		"""
 			Overwrites the map that was loaded orginally with current data.
+			Note that this is the same as writeCGZ(mappath)
 		"""
 		self.writeCGZ(self.mappath)
 		
 	def replacetex(self, kind, oldtex, newtex):
 		"""
 			Replace all certian textures of a kind with a new texture.
-			kind - the kind of texture to replace
-				-1 - All
-				 0 - wtex
-				 1 - ftex
-				 2 - ctex
-				 3 - utex
-			oldtex - the texture number to replace
-			newtex - the number to replace it with
+			:param kind: The kind of texture to replace, *-1* is all, *0* replaces the wtex, *1* replaces the ftex, *2* replaces the ctex, *3* replaces the utex
+			:param oldtex: The texture number to replace
+			:param newtex: The number to replace it with
+			
+			:returns: The number of replacements made
 		 """
 		replacements = 0
 		if kind == -1:
@@ -449,6 +486,8 @@ class ACMap():
 	def cubicsize(self):
 		"""
 			Returns the amount of cubes in the map. It is determined mathmatically rather than by the size of the cube array.
+			
+			:returns: Integer 
 		"""
 		ssize = 1<<self.header.sfactor
 		return ssize*ssize
@@ -456,6 +495,7 @@ class ACMap():
 	def returnIndex(self, x, y):
 		"""
 			Returns the indice for a 1d array of cubes from an x y coord. Reverse of ACMap.returnXY.
+			:returns: Integer
 		"""
 		ssize = 1<<self.header.sfactor
 		return (y * ssize) + x
@@ -463,18 +503,24 @@ class ACMap():
 	def returnXY(self, index):
 		"""
 			Returns the xy coords (of a 2d array) from the given indice (from a 1d array). reverse of ACMap.returnIndex
+			
+			:returns: Tuple (x, y)
 		"""
 		ssize = 1<<self.header.sfactor
 		y = int(index / ssize) #Cuts off the remainder
 		x = index - (y*ssize)
-		return [x, y]
+		return (x, y)
 	
 	def outofBounds(self, (x, y)):
 		"""
 			Determines if the coords given are out of bounds.
+			
+			:returns: Bool
 		"""
 		if self.returnIndex(x, y) >= self.cubicsize():
 			return True
+		else:
+			return False
 			
 	def badcube(self, (x, y), border = 2):
 		"""
@@ -482,7 +528,9 @@ class ACMap():
 			A bad cube is a cube that may have trouble rendering ingame.
 			Cube draws a border of 2 around the map.
 			
-			Border is the border to use.
+			:param border: The width of a border to use.
+			
+			:returns: Bool
 		"""
 		limit = self.returnXY(self.cubicsize()-1)[0]
 		if x >= limit-border+1 or y >= limit-border+1:
@@ -496,6 +544,8 @@ class ACMap():
 			Draws a border around the edge of the map. This prevents visual glitches when
 			viewing the maps edge. It is recommended for all maps (if made from scratch).
 			Border is the border you want around the map. Nothing lower than 2 is recommended.
+			
+			:param border: The width of a border to use.
 		"""
 		for i, cube in enumerate(self.cubelist):
 			if self.badcube(self.returnXY(i), border):
@@ -505,6 +555,8 @@ class ACMap():
 		"""
 			Preferred way to add an entity.
 			Adds an entity to the entity list and increments the header number of ents.
+			
+			:returns: new length of the entity list
 		"""
 		self.entities.append( Entity( [x, y, z], [attr1, attr2, attr3, attr4], kind) )
 		self.header.numents += 1
@@ -514,41 +566,36 @@ class ACMap():
 		"""
 			Preferred way to delete an entity.
 			Deletes an entity from the entity list and decriements the headers number of ents.
+			
+			:param i: index of the entitiy to delete
+			
+			:returns: new length of the entity list
 		"""
 		del self.entities[i]
 		self.header.numents -= 1
 		return len(self.entities)
 	
-	def placeMacro(self, macro, xoffset, yoffset):
-		"""
-			Old method, should not be used.
-			Places a macro. A macro is a list of cube coords.
-			
-		"""
-		for i in macro:
-			sqr = self.cubelist[self.returnIndex(i[0]+xoffset, i[1]+yoffset)]
-			sqr.floor = 2
-			sqr.ftex = 0
-			sqr.wtex = 0
-	
 	def placeShape(self, coords, origin=(0,0), sqr=None, includes=None):
 		"""
 			Places a shape on the map.
-			coords - The shape. A list of coordinates to modify.
-			origin - The upper left corner of where the shape will be placed.
-			sqr - The square template (a Square() class) to change the coords to.
-			includes - A dictionary of attributes to change. If sqr is left as None, then the values are used as absolutes. If sqr is not None, then the keys given in includes will be the values copied from sqr to the shape.
-				'kind' - changes the squares kind to the value given.
-				'floor' - changes the squares height by the value given. None makes this the same as the sqr's floor value
-				'wtex' - changes the squares wtex to the value given.
-				'vdelta' - changes the squares vdelta to the value given.
-				'ceil'  - changes the squares ceil height by the value given. None makes this the same as the sqr's ceil value
-				'ftex'  - changes the squares ftex to the value given.
-				'utex'  - changes the squares utex to the value given.
-				'tag' - changes the squares tag to the value given.
-				
-				'fd' - stands for floor delta, if it exists then the floor value is given as a delta.
-				'cd' - stands for ceil delta, if it exists then the floor value is given as a delta.
+			
+			:param coords: The shape. A list of coordinates to modify.
+			:param origin: The upper left corner of where the shape will be placed.
+			:param sqr: The square template (a Square() class) to change the coords to.
+			:param includes: A dictionary of attributes to change. If sqr is left as None, then the values are used as absolutes. If sqr is not None, then the keys given in includes will be the values copied from sqr to the shape.
+			
+			Possible values for **includes**
+			
+			- *'kind'* - changes the squares kind to the value given.
+			- *'floor'* - changes the squares height by the value given. None makes this the same as the sqr's floor value
+			- *'wtex'* - changes the squares wtex to the value given.
+			- *'vdelta'* - changes the squares vdelta to the value given.
+			- *'ceil'*  - changes the squares ceil height by the value given. None makes this the same as the sqr's ceil value
+			- *'ftex'*  - changes the squares ftex to the value given.
+			- *'utex'*  - changes the squares utex to the value given.
+			- *'tag'* - changes the squares tag to the value given.
+			- *'fd'* - stands for floor delta, if it exists then the floor value is given as a delta.
+			- *'cd'* - stands for ceil delta, if it exists then the floor value is given as a delta.
 			
 		"""
 		if includes == None and sqr != None:
@@ -596,13 +643,13 @@ class ACMap():
 				if 'tag' in includes: cube.tag = includes['tag']
 		
 			
-	def entstats(self):
-		"""
-			WIP
-			Placeholder
-			Will return the same information as /entstats in AC. Possibly as a string, print, or tuple
-		"""
-		return
+#	def entstats(self):
+#		"""
+#			WIP
+#			Placeholder
+#			Will return the same information as /entstats in AC. Possibly as a string, print, or tuple
+#		"""
+#		return
 		
 	def populate(self):
 		"""
@@ -620,25 +667,29 @@ class ACMap():
 		"""
 			Changes the square at the specified index to the default solid values
 		"""
-		self.cubelist[index] = Square(CubeTypes.SOLID, wtex = self.defaults["wtex"], vdelta = self.defaults["vdelta"])
+		self.cubelist[index] = self.returnSolid
+		
 	def placeSpace(self, index):
-		self.cubelist[index] = Square(CubeTypes.SPACE, utex = self.defaults["utex"], tag = self.defaults["tag"], floor = self.defaults["floor"], ftex = self.defaults["ftex"], vdelta = self.defaults["vdelta"], ctex = self.defaults["ctex"], wtex = self.defaults["wtex"], ceil = self.defaults["ceil"] )
+		"""
+			Changes the square at the specified index to the default space values
+		"""
+		self.cubelist[index] = self.returnSpace
 	
 	def returnSpace(self):
 		"""
-			Changes the square at the specified index to the default space (empty values
+			:returns: default empty square.
 		"""
 		return Square(CubeTypes.SPACE, utex = self.defaults["utex"], tag = self.defaults["tag"], floor = self.defaults["floor"], ftex = self.defaults["ftex"], vdelta = self.defaults["vdelta"], ctex = self.defaults["ctex"], wtex = self.defaults["wtex"], ceil = self.defaults["ceil"] )
 	
 	def returnSolid(self):
 		"""
-			Returns the default solid square.
+			:returns: the default solid square.
 		"""
 		return Square(CubeTypes.SOLID, wtex = self.defaults["wtex"], vdelta = self.defaults["vdelta"])
 	
 	def return2dlist(self):
 		"""
-			Returns a 2d list (array) of the cubes.
+			:returns: a 2d list (array) of the cubes.
 		"""
 		retlist = []
 		#cubelist = list(self.cubelist) #make a copy so we dont mess anything up

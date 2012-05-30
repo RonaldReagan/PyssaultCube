@@ -9,6 +9,7 @@ def packstr(stri, length, filler = '\x00'):
 		stri   - the content
 		length - the space allotted
 		filler - the filler for excess space if needed.
+		
 		>>> packstr("ACMP", 10, filler = "!")
 		'ACMP!!!!!!'
 		
@@ -150,22 +151,19 @@ class Header():
 		Hold all the header data for the map. Although it could be included in the map class,
 		this is kept seperate to be consistant with the AC source.
 		
-		Main Vars:
-		head        - Used by AC. Usually just ACMP
-		version     - Map file version. Current supported map revision is kept in consts.py
-		headersize  - The headersize, used to read map files. Leave at the default value
-		sfactor     - "size factor" the size of the map. The value you use to indicate the size in /newmap <val>
-		numents     - the number of entities in the map. IMPORTANT: the map file will be messed up if
-		                  this number isn't updated with the entity list before saving.
-		maptitle    - the mapmessage
-		texlist     - most recently used by textures. Default tex list allows editing. Leave it default unless you
-		                  want editor errors
-		waterlevel  - the level of the water in the map
-		watercolor  - four list of the water color values
-		maprevision - the map revision
-		ambient     - the ambient light value for the map
-		reserved    - not sure what this does, but it is in the mapfile
-		mediareq    - "media required"? Used for mappacks, not sure what this exactly does
+		:param head: Used by AC. Usually just ACMP
+		:param version: Map file version. Current supported map revision is kept in consts.py
+		:param headersize: The headersize, used to read map files. Leave at the default value
+		:param sfactor: "size factor" the size of the map. The value you use to indicate the size in /newmap <val>
+		:param numents: the number of entities in the map. IMPORTANT: the map file will be messed up if this number isn't updated with the entity list before saving.
+		:param maptitle: the mapmessage
+		:param texlist: most recently used by textures. Default tex list allows editing. Leave it default unless you want editor errors
+		:param waterlevel: the level of the water in the map
+		:param watercolor: four list of the water color values
+		:param maprevision: the map revision
+		:param ambient: the ambient light value for the map
+		:param reserved: not sure what this does, but it is in the mapfile
+		:param mediareq: "media required"? Used for mappacks, not sure what this exactly does
 	"""
 	def __init__(self):
 		"""
@@ -642,14 +640,7 @@ class ACMap():
 				if 'utex' in includes: cube.utex = includes['utex']
 				if 'tag' in includes: cube.tag = includes['tag']
 		
-			
-#	def entstats(self):
-#		"""
-#			WIP
-#			Placeholder
-#			Will return the same information as /entstats in AC. Possibly as a string, print, or tuple
-#		"""
-#		return
+
 		
 	def populate(self):
 		"""

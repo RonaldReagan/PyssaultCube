@@ -3,7 +3,9 @@ import string
 
 def cleanpathline(path):
 	"""
-		Cleans a line extracting just the path. Returns a string.
+		Cleans a line extracting just the path.
+		
+			:rtype: a string
 	"""
 	quotes = False
 	path = path.strip() #Replace is in place becase of the commonality of tabs and spaces
@@ -23,13 +25,17 @@ def cleanpathline(path):
 
 def formatpathline(path):
 	"""
-		Formats a path to include quotes. Returns a string.
+		Formats a path to include quotes.
+		
+			:rtype: a string
 	"""
 	return '"' + path + '"'
 
 def cleanintline(line, base = 10):
 	"""
-		Cleans a line containing an integer. Reterns an int
+		Cleans a line containing an integer.
+		
+			:rtype: a int
 	"""
 	retstr = ''
 	line = line.strip()
@@ -48,8 +54,10 @@ def cleanintline(line, base = 10):
 	
 class Mapmodel():
 	"""
-		Basic class for a mapmodel. The format is usually:
+		Basic class for a mapmodel. The format in the cfg file is:
 		mapmodel 2 2 0 0 "nothing"
+		
+		Where (mapping to values in this class):
 		sqrad - arg1
 		bbhght - arg2
 		ihght - arg3
@@ -61,29 +69,73 @@ class Mapmodel():
 		self.sqrad = sqrad
 		self.bbhght = bbhght
 		self.ihght = ihght
+		
 	def pack(self): #Possibly a misnomer
 		"""
-			Formats the string for use in a cfg file. Returns a string
+			Formats the model for use in a cfg file.
+			
+			:rtype: a string
 		"""
 		return 'mapmodel {0} {1} {2} 0 "{3}"'.format(self.sqrad, self.bbhght, self.ihght, self.path)
 	
-class Texture(): #texture 0 "kurt/klite1.jpg"
+class Texture():
+	"""
+		Basic class for a texture. The format in the cfg file is:
+		texture 0 "kurt/klite1.jpg"
+		
+		Where (mapping to values in this class):
+		scale - arg1
+		path - arg2
+	"""
 	def __init__(self, scale, path):
 		self.path = path
 		self.scale = scale
 		
-	def pack(self): #Possibly a misnomer
+	def pack(self):
+		"""
+			Formats the texture for use in a cfg file.
+			
+			:rtype: a string
+		"""
 		return "texture {scale} {path}".format(scale = self.scale, path = formatpathline(self.path))
 
-class Sound():#mapsound "ambience/cavedrip.ogg" -1
+class Sound():
+	"""
+		Basic class for a sound. The format in the cfg file is:
+		mapsound "ambience/cavedrip.ogg" -1
+		
+		Where (mapping to values in this class):
+		path = arg1
+		maxsim = arg2
+	"""
 	def __init__(self, path, maxsim):
 		self.path = path
 		self.maxsim = maxsim
 	def pack(self):
+		"""
+			Formats the sound for use in a cfg file.
+			
+			:rtype: a string
+		"""
 		return "mapsound {0} {1}".format( formatpathline(self.path), self.maxsim )
 
-class MapCFG(): #loadnotexture loadsky mapmodelreset mapmodel texturereset texture fog fogcolour mapsoundreset mapsound watercolour shadowyaw
-	def __init__(self, cfgpath):
+class MapCFG():
+	"""
+		A class for map configuration files. 
+		
+		Main Variables:
+		:param path: path to the cfg file
+		:param mapmodels: a list containing all mapmodels
+		:param textures: a list containing all textures
+		:param sounds: a list containing all sounds
+		:param sky: the sky set by the "loadsky: command
+		:param fog: the fog density
+		:param fogcolour: the fog colour
+		:param watercolour: the water colour
+		:param shadowyaw: the shadowyaw
+		:param WTFs: a list containing all unknown lines
+	"""
+	def __init__(self, cfgpath, parse=True):
 		self.path = cfgpath
 		self.mapmodels = []
 		self.textures = []
@@ -94,9 +146,13 @@ class MapCFG(): #loadnotexture loadsky mapmodelreset mapmodel texturereset textu
 		self.watercolour = [-1, -1, -1]
 		self.shadowyaw = -1
 		self.WTFs = []
-		self.parseCFG(self.path)
+		if parse:
+			self.parseCFG(self.path)
 		
 	def parseCFG(self, path):
+		"""
+			Parses the config specified by path
+		"""
 		cfg = open(path, 'r')
 		for linee in cfg:
 			#linee = dirty version of the line
@@ -150,6 +206,12 @@ class MapCFG(): #loadnotexture loadsky mapmodelreset mapmodel texturereset textu
 		cfg.close()
 	
 	def writeCFG(self, path, wtfs=0):
+		"""
+			Writes the config to the path specified by path
+			
+			:param path: path to write the config to
+			:param wtfs: The location to write all of the WTFs to. **0** do not save them. **1** write them at the start of the cfg file. **2** write them at the end of the file.
+		"""
 		cfg = open(path, "w")
 		
 		if wtfs == 1:

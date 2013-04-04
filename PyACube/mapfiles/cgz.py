@@ -228,8 +228,8 @@ class Entity():
 	"""
 	def __init__(self, xyz, attrs, kind):
 		self.kind = kind
-		self.xyz = xyz
-		self.attrs = attrs
+		self.xyz = tuple(xyz)
+		self.attrs = list(attrs)
 		
 	def pack(self):
 		"""
@@ -272,7 +272,7 @@ class ACMap():
 		self.header = Header()
 		self.entities = []
 		self.defaults = {"wtex":2, "vdelta":0, "floor":0, "ceil":16, "ftex":3, "ctex":5, "utex":2, "tag":0}
-		self.defaultsqr = (Square(CubeTypes.SPACE, utex = self.defaults["utex"], tag = self.defaults["tag"], floor = self.defaults["floor"], ftex = self.defaults["ftex"], vdelta = self.defaults["vdelta"], ctex = self.defaults["ctex"], wtex = self.defaults["wtex"], ceil = self.defaults["ceil"] ),Square(CubeTypes.SOLID, wtex = self.defaults["wtex"], vdelta = self.defaults["vdelta"]))
+		self.defaultsqr = (self.returnSpace(),self.returnSolid())
 		if parse:
 			if self.mappath == '':
 				raise MapError, "Have to provide a mappath when parsing!"
@@ -353,7 +353,7 @@ class ACMap():
 			else:
 				self.cubelist.append( unpacksqr(val[0], file) )
 		if len(self.cubelist) != self.cubicsize():
-			print("Cubicsize is not the same as the cubelist!")
+			print("Error: Cubicsize is not the same as the cubelist!")
 		file.close()
 		
 		return self
@@ -642,14 +642,16 @@ class ACMap():
 		
 
 		
-	def populate(self):
+	def populate(self,erase=False):
 		"""
 			Populates the cubelist with the default squares.
 			Creates an empty map.
 		"""
+		if erase:
+			self.cubelist = []
 		if len(self.cubelist) == 0:
 			for i in range(self.cubicsize()):
-				self.cubelist.append(Square(CubeTypes.SPACE, utex = self.defaults["utex"], tag = self.defaults["tag"], floor = self.defaults["floor"], ftex = self.defaults["ftex"], vdelta = self.defaults["vdelta"], ctex = self.defaults["ctex"], wtex = self.defaults["wtex"], ceil = self.defaults["ceil"] ))
+				self.cubelist.append(self.returnSpace())
 		
 		self.cubeArray = self.return2dlist()
 		return self

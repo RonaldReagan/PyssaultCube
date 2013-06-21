@@ -320,7 +320,7 @@ class ACMap():
 		#This should finish up the header.
 		
 		#Make sure we are at the right spot.
-		file.seek(1108) #TODO: Figure out if this number is going to always be 1108, or the headersize
+		file.seek(self.header.headersize)
 		
 		#SIZEOF: 12
 		#Entity 1: x-16 y-47 z-6 attr1-4 type-1 attr2-11 attr3-16 attr4-21

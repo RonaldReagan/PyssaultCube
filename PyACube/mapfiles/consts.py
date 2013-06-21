@@ -1,4 +1,4 @@
-CURRENTMAPVERSION = 8
+CURRENTMAPVERSION = 9
 
 #Kinds of entities
 

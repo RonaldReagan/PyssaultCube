@@ -137,10 +137,12 @@ class ACServer():
 			elif mm:
 				self.pongresponse = MasterModes[mm]
 		
+		#FIXME: Hackish and probably will bug up once and awhile.
 		tmpplayers = self.data[i:].split('\x00')
 		for player in tmpplayers:
+			player = player.strip('\x01')
 			if player != '':
-				self.players.append(player.strip('\x01'))
+				self.players.append(player)
 		
 		return True
 		

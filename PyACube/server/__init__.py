@@ -35,7 +35,7 @@ def getint(p):
 def decolorize(s):
 	while "\f" in s:
 		a = s.find("\f")
-		b = s.find("\f")+2
+		b = a+2
 		s = s.replace(s[a:b], "") 
 	return s
 
@@ -55,7 +55,7 @@ class ACServer():
 		self.reset()
 		self.host = host
 		self.port = port
-		self.update()
+# 		self.update()
 		
 	def reset(self):
 		self.mode = -1
@@ -72,17 +72,18 @@ class ACServer():
 		self.data = ''
 		self.rawname = ''
 		
-	def update(self):
+	def update(self,qtype=1):
+		self.reset()
+		
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		s.connect((self.host, self.port + 1))
 		s.settimeout(3)
-		s.send(tostr('0a01'))
-		self.reset()
+		s.send(chr(1)+chr(qtype))
 		
 		data = ''
 		self.data = ''
 		try:
-			data = s.recv(1024)
+			data = s.recv(MAXTRANS)
 			self.data += data
 		except socket.timeout:
 			self.reset()
@@ -94,14 +95,13 @@ class ACServer():
 		self.mode = getint(self.data[5])
 		if self.mode > len(MODES):
 			self.modename = "ERROR"
-			if DEBUG: print( "{0}-{1} ERROR: Mode is out of range: {2}".format(self.host, self.port, self.mode))
 			return
 		else:
 			self.modename = MODES[self.mode + 1]
 			
 		self.ord = ord(self.data[6])
-		self.numplayers = round(getint(self.data[6]))
-		self.minremain = round(getint(self.data[7]))
+		self.numplayers = getint(self.data[6])
+		self.minremain = getint(self.data[7])
 		self.map = ''
 		self.name = ''
 		i = 8
@@ -109,30 +109,32 @@ class ACServer():
 			self.map += self.data[i]
 			i += 1
 			
-		j = i + 1
+		i += 1
 		
-		while(not ord(self.data[j]) == 0):
-			self.rawname += self.data[j]
-			j += 1
+		while(not ord(self.data[i]) == 0):
+			self.rawname += self.data[i]
+			i += 1
 		self.name = decolorize(self.rawname)
 		
-		self.maxplayers = round(getint(self.data[j + 1]))
-		self.pongflags = getint(self.data[j + 2]) #probably only used within this part
+		i+=1
+		self.maxplayers = getint(self.data[i])
+		i+=1
+		self.pongflags = getint(self.data[i]) #probably only used within this part
 		self.pongresponse = ''
 		
 		if self.pongflags > 0:
-			mm = self.pongflags >> 6;
+			mm = self.pongflags >> 6
 			
 			if self.pongflags & (1 << 1):
-				self.pongresponse = "you are banned from this server";
+				self.pongresponse = PF_BANNED
 			if self.pongflags & (1 << 2):
-				self.pongresponse = "you are blacklisted on this server";
+				self.pongresponse = PF_BLACKLISTED
 			elif self.pongflags & (1 << 0):
-				self.pongresponse = "this server is password-protected";
+				self.pongresponse = PF_PASSPROTECTED
 			elif mm:
-				self.pongresponse = MasterModes[mm];
+				self.pongresponse = MasterModes[mm]
 		
-		tmpplayers = data.split('\x00')[4:]
+		tmpplayers = data[i:].split('\x00')
 		for player in tmpplayers:
 			if player is not '':
 				self.players.append(player.strip('\x01'))	
@@ -172,9 +174,7 @@ class ACMS():
 				break
 				
 			tmpsrv = i.split()
-			if DEBUG: print tmpsrv
 			del tmpsrv[0]
-			if DEBUG: print tmpsrv
 			if self.extensive:
 				self.srvlist.append( ACServer(tmpsrv[0], int(tmpsrv[1])) )
 			else:

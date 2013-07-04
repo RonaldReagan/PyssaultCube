@@ -52,6 +52,19 @@ Modes_acynm = [
 		 "NULL",
 		 ]
 
+EXTPING_NOP = 0
+EXTPING_NAMELIST = 1
+EXTPING_SERVERINFO = 2
+EXTPING_MAPROT = 3
+EXTPING_UPLINKSTATS = 4
+EXTPING_NUM = 5
+
+MAXTRANS = 5000
+
+PF_BANNED = 0 # you are banned from this server
+PF_BLACKLISTED = 1 # you are blacklisted on this server
+PF_PASSPROTECTED = 2 # this server is password-protected
+
 
 MasterModes = ["open", "private", "match"]
 

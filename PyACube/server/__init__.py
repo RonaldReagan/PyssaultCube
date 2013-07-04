@@ -4,8 +4,6 @@ import socket
 
 from consts import *
 
-DEBUG = False
-
 def html_escape(text): #http://wiki.python.org/moin/EscapingHtml
 	"""Produce entities within text."""
 	return "".join(html_escape_table.get(c,c) for c in text)
@@ -55,7 +53,7 @@ class ACServer():
 		self.reset()
 		self.host = host
 		self.port = port
-# 		self.update()
+		self.update()
 		
 	def reset(self):
 		self.mode = -1
@@ -67,35 +65,40 @@ class ACServer():
 		self.name = ''
 		self.maxplayers = 0
 		self.pongflags = 0 #probably only used within this part
-		self.pongresponse = ''
+		self.pongresponse = 0
 		self.players = []
 		self.data = ''
 		self.rawname = ''
-		
-	def update(self,qtype=1):
-		self.reset()
-		
+	
+	def getData(self,qtype):
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		s.connect((self.host, self.port + 1))
 		s.settimeout(3)
 		s.send(chr(1)+chr(qtype))
 		
-		data = ''
-		self.data = ''
 		try:
 			data = s.recv(MAXTRANS)
-			self.data += data
 		except socket.timeout:
 			self.reset()
-			return "socket timed out"
-		except Exception as e:
-			return e
+			return None
 		
-		#more complex stuff
+		return data
+		
+		
+	def update(self):
+		"""
+			Updates information.
+			If there is a problem (most likely timeout) returns False. Else returns True
+		"""
+		self.reset()
+		self.data = self.getData(1)
+		
+		if self.data == None:
+			return False
+		
 		self.mode = getint(self.data[5])
 		if self.mode > len(MODES):
 			self.modename = "ERROR"
-			return
 		else:
 			self.modename = MODES[self.mode + 1]
 			
@@ -134,10 +137,12 @@ class ACServer():
 			elif mm:
 				self.pongresponse = MasterModes[mm]
 		
-		tmpplayers = data[i:].split('\x00')
+		tmpplayers = self.data[i:].split('\x00')
 		for player in tmpplayers:
-			if player is not '':
-				self.players.append(player.strip('\x01'))	
+			if player != '':
+				self.players.append(player.strip('\x01'))
+		
+		return True
 		
 
 class ACMS():
@@ -154,7 +159,6 @@ class ACMS():
 		self.totalplrs = 0
 		for srv in self.srvlist:
 			self.totalplrs += srv.numplayers
-			if DEBUG: print self.totalplrs
 			
 	def update(self, fullupdate):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

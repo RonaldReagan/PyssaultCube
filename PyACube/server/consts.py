@@ -61,9 +61,10 @@ EXTPING_NUM = 5
 
 MAXTRANS = 5000
 
-PF_BANNED = 0 # you are banned from this server
-PF_BLACKLISTED = 1 # you are blacklisted on this server
-PF_PASSPROTECTED = 2 # this server is password-protected
+PF_OPEN = 0
+PF_BANNED = 1 # you are banned from this server
+PF_BLACKLISTED = 2 # you are blacklisted on this server
+PF_PASSPROTECTED = 3 # this server is password-protected
 
 
 MasterModes = ["open", "private", "match"]

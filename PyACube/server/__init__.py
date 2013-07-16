@@ -69,19 +69,21 @@ class ACServer():
 		self.players = []
 		self.data = ''
 		self.rawname = ''
+		self.error = None
 	
 	def getData(self,qtype):
-		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		s.connect((self.host, self.port + 1))
-		s.settimeout(3)
-		s.send(chr(1)+chr(qtype))
-		
 		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			s.connect((self.host, self.port + 1))
+			s.settimeout(3)
+			s.send(chr(1)+chr(qtype))
 			data = s.recv(MAXTRANS)
-		except socket.timeout:
+		except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
 			self.reset()
+			self.error = e
 			return None
 		
+		self.error = None
 		return data
 		
 		
@@ -148,32 +150,52 @@ class ACServer():
 		
 
 class ACMS():
-	def __init__(self, host='assault.cubers.net', port=28760, extensive=True, sentstr='Pyssaultcube 666'):
+	def __init__(self, host='assault.cubers.net', port=28760, extensive=True, sentstr='Pyssaultcube 42'):
 		self.extensive = extensive
 		self.host = host
 		self.port = port
-		self.srvlist = []
-		self.data = ''
+
 		self.sendstr = sentstr
 		self.update(extensive)
+	
+	def reset(self):
+		self.error = None
+		self.srvlist = []
+		self.data = ''
+		self.totalplrs = 0
+		self.numsrvs = 0
 		
 	def _updateplr_(self):
 		self.totalplrs = 0
 		for srv in self.srvlist:
 			self.totalplrs += srv.numplayers
+		
+	def getData(self):
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((self.host, self.port))
+			s.send('list {0}\n'.format(self.sendstr))
+		
+			data = ""
+			while True:
+				d = s.recv(1024) 
+				if len(d) == 0: 
+					break  #EOF 
+				data += d
+		except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
+			self.reset
+			self.error = e
+			return None
+			
+		self.error = None
+		return data
 			
 	def update(self, fullupdate):
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((self.host, self.port))
-		s.send('list {0}\n'.format(self.sendstr))
+		self.reset()
+		self.data = self.getData()
 		
-		self.srvlist = []
-		
-		while True:
-			data = s.recv(1024) 
-			if len(data) == 0: 
-				break  #EOF 
-			self.data += data
+		if self.data == None:
+			return False
 		
 		for i in self.data.split("\n"):
 			if i[0] != "a":
@@ -188,3 +210,5 @@ class ACMS():
 		self.numsrvs = len(self.srvlist)
 		if fullupdate:
 			self._updateplr_()
+		
+		return True

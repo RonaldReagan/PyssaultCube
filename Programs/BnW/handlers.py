@@ -1,8 +1,9 @@
-from PIL import ImageEnhance, ImageOps
+from PIL import ImageEnhance
 
 def blacknwhite(im,arg):
-	return ImageOps.grayscale(im)
+	return im.convert('LA').convert('RGBA')
 
 def saturate(im,arg):
+	#May partially remove transparency.
 	converter = ImageEnhance.Color(im)
-	return converter.enhance(0.5)
+	return converter.enhance(arg)

@@ -1,5 +1,4 @@
 MODES = [
-		 "DEMO",
 		 "TEAMDEATHMATCH",
 		 "COOPEDIT",
 		 "DEATHMATCH",
@@ -23,10 +22,10 @@ MODES = [
 		 "BOTTEAMSURVIVOR",
 		 "BOTTEAMONESHOTONKILL",
 		 "NULL",
+		 "DEMO",
 		 ]
 		 
 Modes_acynm = [
-		"DEMO",
 		 "TDM",
 		 "COOP",
 		 "DM",
@@ -50,6 +49,7 @@ Modes_acynm = [
 		 "BTSURV",
 		 "BTOSOK",
 		 "NULL",
+		 "DEMO", #Demo mode num = -1
 		 ]
 
 EXTPING_NOP = 0

@@ -8,6 +8,7 @@ from maperror import *
 def parseSquares(file,hdr):
 	file.seek(sizeOfStruct(Headers[hdr['version']])+(sizeOfStruct(ENTITY)*hdr['numents']))
 	ns = 0
+	sqr = None
 	while ns != getCubicSize(hdr):
 		val = file.read(1)
 		if val == '':
@@ -15,11 +16,10 @@ def parseSquares(file,hdr):
 		
 		val = struct.unpack('<B', val)[0]
 		
-		sqr = None
 		if val == 255:
 			for i in range(ord(file.read(1))):
+				yield getPos(ns,hdr), sqr
 				ns += 1
-				yield sqr
 		else:
 			if val == 0: #Solid
 				sqr = readStruct(file, SQUARE, filters=["_unused_","_spaceonly_"])
@@ -28,8 +28,8 @@ def parseSquares(file,hdr):
 				
 			sqr['kind'] = val
 			
+			yield getPos(ns,hdr), sqr
 			ns += 1
-			yield sqr
 
 def getCubicSize(hdr):
 	ssize = getSideSize(hdr)
@@ -38,7 +38,7 @@ def getCubicSize(hdr):
 def getSideSize(hdr):
 	return 1<<hdr['sfactor']
 
-def getPos(i,hdr):
+def getPos(index,hdr):
 	ssize = getSideSize(hdr)
 	y = int(index / ssize) #Gets floored.
 	x = index - (y*ssize)

@@ -159,7 +159,7 @@ ENTITY = [
 				"type":TYPE_SHORT
 			},
 			{	
-				"name":"type",
+				"name":"kind",
 				"type":TYPE_UCHAR
 			},
 			{	
@@ -185,11 +185,13 @@ SQUARE = [
 			{	
 				"name":"floor",
 				"type":TYPE_CHAR,
+				"default": 0,
 				"_spaceonly_": True
 			},
 			{	
 				"name":"ceil",
 				"type":TYPE_CHAR,
+				"default": 16,
 				"_spaceonly_": True
 			},
 			{	
@@ -199,11 +201,13 @@ SQUARE = [
 			{	
 				"name":"ftex",
 				"type":TYPE_UCHAR,
+				"default": 3,
 				"_spaceonly_": True
 			},
 			{	
 				"name":"ctex",
 				"type":TYPE_UCHAR,
+				"default": 5,
 				"_spaceonly_": True
 			},
 			{	
@@ -213,11 +217,13 @@ SQUARE = [
 			{	
 				"name":"utex",
 				"type":TYPE_UCHAR,
+				"default": 2,
 				"_spaceonly_": True
 			},
 			{	
 				"name":"tag",
 				"type":TYPE_UCHAR,
+				"default": 0,
 				"_spaceonly_": True
 			}
 		]

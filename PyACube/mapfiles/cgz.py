@@ -189,6 +189,31 @@ class Header():
 		self.ambient = 0 #928
 		self.reserved = [0,0,0,0,0,0,0,0,0,0,0,0]
 		self.mediareq = ""
+	
+	def parse(self, file):
+		"""
+			Takes a file-like-object "file" and parses it. Assumes the file
+			position is at the start of the header.
+		"""
+		self.head = file.read(4)
+		self.version = struct.unpack("i", file.read(4))[0]
+		self.headersize = struct.unpack("i", file.read(4))[0]
+		self.sfactor = struct.unpack("i", file.read(4))[0]
+		self.numents = struct.unpack("i", file.read(4))[0]
+		self.maptitle = file.read(128).strip('\x00')
+		
+		for i in range(3):
+			for j in range(256):
+				self.texlist[i][j] = struct.unpack('B', file.read(1))[0]
+				
+		self.waterlevel = struct.unpack("i", file.read(4))[0]
+		for i in range (4):
+			self.watercolor[i] = struct.unpack('B', file.read(1))[0]
+		self.maprevision = struct.unpack("i", file.read(4))[0]
+		self.ambient = struct.unpack("i", file.read(4))[0]
+		
+		return self
+		
 	def pack(self):
 		"""
 			Packs the header to save into the map file
@@ -209,7 +234,7 @@ class Header():
 		retstr += packstr(self.mediareq, 128)
 		return retstr
 	def __repr__(self):
-		return "<Header mapversion {0}>".format(self.mapversion)
+		return "<Header mapversion {0}>".format(self.version)
 		
 #SIZEOF: 12
 #Entity 1: x-16 y-47 z-6 attr1-4 type-1 attr2-11 attr3-16 attr4-21
@@ -266,7 +291,7 @@ class ACMap():
 		:param defaultsqr: The default square used in various operations to the map. Uses values from defaults.
 		:type defaultsqr: Square
 	"""
-	def __init__(self, mappath='', parse=True, sfactor=6, mapversion=CURRENTMAPVERSION, maptitle=''):
+	def __init__(self, mappath=None, parse=True, sfactor=6, mapversion=CURRENTMAPVERSION, maptitle=''):
 		self.cubelist = []
 		self.mappath = mappath
 		self.header = Header()
@@ -274,7 +299,7 @@ class ACMap():
 		self.defaults = {"wtex":2, "vdelta":0, "floor":0, "ceil":16, "ftex":3, "ctex":5, "utex":2, "tag":0}
 		self.defaultsqr = (self.returnSpace(),self.returnSolid())
 		if parse:
-			if self.mappath == '':
+			if self.mappath == None:
 				raise MapError, "Have to provide a mappath when parsing!"
 			else:
 				self.parseCGZ(mappath)
@@ -293,26 +318,14 @@ class ACMap():
 		"""
 			Parses the map file given by path.
 		"""
-		self.mapname = path.split("/")[-1]
-		file = gzip.open(path, "rb")
+		if type(self.mappath) == str:
+			self.mapname = path.split("/")[-1]
+			file = gzip.open(path, "rb")
+		else:
+			file = gzip.GzipFile(fileobj=path)
 		
-		#We read header here
-		self.header.head = file.read(4)
-		self.header.version = struct.unpack("i", file.read(4))[0]
-		self.header.headersize = struct.unpack("i", file.read(4))[0]
-		self.header.sfactor = struct.unpack("i", file.read(4))[0]
-		self.header.numents = struct.unpack("i", file.read(4))[0]
-		self.header.maptitle = file.read(128).strip('\x00')
 		
-		for i in range(3):
-			for j in range(256):
-				self.header.texlist[i][j] = struct.unpack('B', file.read(1))[0]
-				
-		self.header.waterlevel = struct.unpack("i", file.read(4))[0]
-		for i in range (4):
-			self.header.watercolor[i] = struct.unpack('B', file.read(1))[0]
-		self.header.maprevision = struct.unpack("i", file.read(4))[0]
-		self.header.ambient = struct.unpack("i", file.read(4))[0]
+		self.header = Header().parse(file)
 		
 		if self.header.version <= 2 or self.header.version > CURRENTMAPVERSION :
 			raise MapError, "Cannot read/write this mapversion {0}".format(self.header.version)
@@ -320,7 +333,7 @@ class ACMap():
 		#This should finish up the header.
 		
 		#Make sure we are at the right spot.
-		file.seek(self.header.headersize)
+		file.seek(1108)
 		
 		#SIZEOF: 12
 		#Entity 1: x-16 y-47 z-6 attr1-4 type-1 attr2-11 attr3-16 attr4-21

@@ -5,12 +5,13 @@ TYPE_INTLIST = 1
 TYPE_UINT = 2
 TYPE_UINTLIST = 3
 TYPE_STR = 4 #Strips 'filler' off of the string. Defaults to '\x00'. Packs with filler.
-TYPE_UCHAR = 5
-TYPE_UCHARLIST = 6 #implied len of 1
-TYPE_CHAR = 7
-TYPE_CHARLIST = 8
-TYPE_SHORT = 9
-TYPE_USHORT = 10
+TYPE_VSTR = 5 #Variable length string, takes the length provided by struct value named in 'size'.
+TYPE_UCHAR = 6
+TYPE_UCHARLIST = 7 #implied len of 1
+TYPE_CHAR = 8
+TYPE_CHARLIST = 9
+TYPE_SHORT = 10
+TYPE_USHORT = 11
 
 def packstr(stri, length, filler = '\x00'):
 	"""
@@ -37,6 +38,8 @@ def sizeOfStruct(structformat):
 			total += 4*item['len']
 		elif item['type'] == TYPE_STR:
 			total += item['len']
+		elif item['type'] == TYPE_VSTR:
+			total += item.get('maxlen',0) #If maxlen provided use this. Probably not the method when using structs with VSTR's
 		elif item['type'] in [TYPE_UCHAR,TYPE_CHAR]:
 			total += 1
 		elif item['type'] in [TYPE_UCHARLIST,TYPE_CHARLIST]:
@@ -78,6 +81,15 @@ def readStruct(file, structformat,endian="<",filters=["_unused_"]):
 				s = s.strip(filler)
 				
 			retdict[item['name']] = s
+		
+		elif item['type'] == TYPE_VSTR:
+			length = retdict[item['size']]
+			s = str(file.read(length))
+			filler = item.get('filler','\x00')
+			if filler:
+				s = s.strip(filler)
+				
+			retdict[item['name']] = s
 			
 		elif item['type'] == TYPE_UCHAR:
 			retdict[item['name']] = struct.unpack(endian+"B", file.read(1))[0]
@@ -112,6 +124,16 @@ def packStruct(structformat, struct,endian="<",filters=["_unused_"]):
 			continue
 			
 		name = item['name']
+		
+		if name not in struct:
+			skip = True
+			default = item.get('default',None)
+			if default != None:
+				struct[name] = default
+		
+		if 'sizeof' in item:
+			struct[name] = len(struct[item['sizeof']])
+			
 		if item['type'] == TYPE_INT:
 			retstr += struct.pack(endian+"i",struct[name])
 			

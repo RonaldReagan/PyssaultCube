@@ -18,7 +18,7 @@ def parseSquares(file,hdr):
 		
 		if val == 255:
 			for i in range(ord(file.read(1))):
-				yield getPos(ns,hdr), sqr
+				yield getPos(ns,hdr), sqr.copy() #Return a new square object
 				ns += 1
 		else:
 			if val == 0: #Solid

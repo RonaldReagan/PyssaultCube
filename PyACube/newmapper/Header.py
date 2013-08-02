@@ -11,7 +11,7 @@ def parseHeader(file):
 	version = struct.unpack("i", file.read(4))[0]
 	
 	if version not in Headers:
-		raise MapError("Invalid map version")
+		raise MapVersionError(version)
 		return None
 	
 	header = readStruct(file,Headers[version])

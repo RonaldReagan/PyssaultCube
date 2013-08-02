@@ -1,20 +1,65 @@
 from structio import *
 
 #And lets hope the maps use the most recent version 6. Lazy version bumping happened back in 93 days...
-HEADER_6 = [
-			{	
-				"name":"head",
+
+#Cube 1 only
+HEADER_5 = [
+			{	"name":"head",
 				"len": 4,
 				"type":TYPE_STR,
 				"_unused_": True
 			},
-			{	
-				"name":"version",
+			{	"name":"version",
 				"type":TYPE_INT,
 				"_unused_": True
 			},
-			{	
-				"name":"headersize",
+			{	"name":"headersize",
+				"type":TYPE_INT
+			},
+			{	"name":"sfactor",
+				"len":4,
+				"type":TYPE_INT
+			},
+			{	"name":"numents",
+				"type":TYPE_INT
+			},
+			{	"name":"maptitle",
+				"len":128,
+				"type":TYPE_STR
+			},
+			{	"name":"texlistA",
+				"len":256,
+				"type":TYPE_UCHARLIST
+			},
+			{	"name":"texlistB",
+				"len":256,
+				"type":TYPE_UCHARLIST
+			},
+			{	"name":"texlistC",
+				"len":256,
+				"type":TYPE_UCHARLIST
+			},
+			{	"name":"waterlevel",
+				"type":TYPE_INT
+			},
+			{	"name":"reserved",
+				"len": 14,
+				"type":TYPE_INTLIST
+			},
+		]
+		
+#Seems to be the first mapversion of AC
+HEADER_6 = [
+			{	"name":"head",
+				"len": 4,
+				"type":TYPE_STR,
+				"_unused_": True
+			},
+			{	"name":"version",
+				"type":TYPE_INT,
+				"_unused_": True
+			},
+			{	"name":"headersize",
 				"type":TYPE_INT
 			},
 			{	"name":"sfactor",
@@ -63,19 +108,16 @@ HEADER_6 = [
 
 #Version bump @r4657, Never in a release?		
 HEADER_7 = [
-			{	
-				"name":"head",
+			{	"name":"head",
 				"len": 4,
 				"type":TYPE_STR,
 				"_unused_": True
 			},
-			{	
-				"name":"version",
+			{	"name":"version",
 				"type":TYPE_INT,
 				"_unused_": True
 			},
-			{	
-				"name":"headersize",
+			{	"name":"headersize",
 				"type":TYPE_INT
 			},
 			{	"name":"sfactor",
@@ -139,7 +181,7 @@ HEADER_8 = HEADER_7 #Same as ver 7
 HEADER_9 = HEADER_8[:-1] #Same as ver 8, but w/o mediapacks
 
 #Use to get the correct header for the version.
-Headers = {6:HEADER_6, 7:HEADER_7, 8:HEADER_8, 9:HEADER_9} 
+Headers = {5:HEADER_5, 6:HEADER_6, 7:HEADER_7, 8:HEADER_8, 9:HEADER_9} 
 			
 ENTITY = [
 			{	

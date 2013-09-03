@@ -4,32 +4,54 @@ import socket
 
 from .. import cbuffer
 from consts import *
+import struct
 
-def getint(pb):
-    c = pb.get()
-    if c == -128:
-        n = pb.get()
-        n |= pb.get()<<8
-        return n
-    elif c == -127:
-        n = pb.get()
-        n |= pb.get()<<8
-        n |= pb.get()<<16
-        n |= pb.get()<<24
-        return n
-    else:
-        return c
-
+class PlayerStat(object):
+    def __init__(self,buf):
+        self.ping = buf.getInt()
+        self.query = buf.getInt()
+        cn = buf.getInt() #Should be -1
+        self.ext_ack = buf.getInt()
+        self.ext_version = buf.getInt()
+        if buf.getInt() == 1:
+            return False
+        buf.getInt() #will be EXT_PLAYERSTATS_RESP_STATS, right?
+        self.cn = buf.getInt()
+        self.ping = buf.getInt()
+        self.name = buf.getStr()
+        self.team = buf.getStr()
+        self.frags = buf.getInt()
+        self.flagscore = buf.getInt()
+        self.deaths = buf.getInt()
+        self.teamkills = buf.getInt()
+        self.accuracy = buf.getInt()
+        self.health = buf.getInt()
+        self.armour = buf.getInt()
+        self.gun = buf.getInt()
+        self.role = buf.getInt()
+        self.state = buf.getInt()
+        self.ip = buf.getInt(),buf.getInt(),buf.getInt()
+        
 class ACServer():
-    def __init__(self, host, port = 28763):
+    def __init__(self, host, port=28763, get=["general"]):
         self.reset()
         self.host = host
         self.port = port
-        self.update()
+        self.get = get
+        
+        self.reset()
+        for i in self.get:
+            if i == "general":
+                self.updateGeneral()
+            elif i == "playerstats":
+                self.updatePlayerStats()
         
     def reset(self):
         self.mode = None
         self.ord = 0
+        self.protocol = 0
+        self.ext_ack = 0
+        self.ext_version = 0
         self.numplayers = 0
         self.minremain = 0
         self.map = ''
@@ -38,16 +60,17 @@ class ACServer():
         self.pongflags = 0 #probably only used within this part
         self.pongresponse = 0
         self.players = []
+        self.playerstats = []
         self.data = ''
         self.rawname = ''
         self.error = None
     
-    def getData(self,qtype):
+    def getData(self,qtype,reqtype=1,extra=[]):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect((self.host, self.port + 1))
             s.settimeout(3)
-            s.send(chr(1)+chr(qtype))
+            s.send(struct.pack('bb',reqtype,qtype)+struct.pack('b'*len(extra),*extra))
             data = s.recv(MAXTRANS)
         except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
             self.reset()
@@ -56,14 +79,12 @@ class ACServer():
         
         self.error = None
         return data
-        
-        
-    def update(self):
+    
+    def updateGeneral(self):
         """
             Updates information.
             If there is a problem (most likely timeout) returns False. Else returns True
         """
-        self.reset()
         self.data = self.getData(1)
         
         if self.data == None:
@@ -94,8 +115,6 @@ class ACServer():
                 self.pongresponse = PF_PASSPROTECTED
             elif mm:
                 self.pongresponse = MasterModes[mm]
-        
-#         #FIXME: Hackish and probably will bug up once and awhile.
 
         if buf.getInt() == self.query: #Namelist
             for player in xrange(self.numplayers):
@@ -103,6 +122,52 @@ class ACServer():
                 self.players.append(player)
         
         return True
+    
+    def updatePlayerStats(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect((self.host, self.port + 1))
+            s.settimeout(3)
+            s.send(struct.pack('bbb',0,1,-1))
+        except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
+            self.reset()
+            self.error = e
+            return None
+            
+        try:
+            data = s.recv(MAXTRANS)
+        except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
+            self.reset()
+            self.error = e
+            return None
+            
+        buf = cbuffer.PacketBuffer(data)
+        self.ping = buf.getInt()
+        self.query = buf.getInt()
+        cn = buf.getInt() #Should be -1
+        self.ext_ack = buf.getInt()
+        self.ext_version = buf.getInt()
+        if buf.getInt() == 1:
+            return False
+    
+        buf.getInt() #Don't really care about this? EXT_PLAYERSTATS_RESP_IDS
+        cns = []
+        while buf.getRemaining():
+            cns.append(buf.getInt())
+    
+        for c in cns:
+            try:
+                data = s.recv(MAXTRANS)
+            except (socket.timeout, socket.error, socket.herror, socket.gaierror) as e:
+                self.reset()
+                self.error = e
+                return None
+            buf = cbuffer.PacketBuffer(data)
+            self.playerstats.append(PlayerStat(buf))
+        
+        return True
+            
+        
         
 
 class ACMS():
